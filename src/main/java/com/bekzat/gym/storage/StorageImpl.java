@@ -2,6 +2,7 @@ package com.bekzat.gym.storage;
 
 import com.bekzat.gym.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 
@@ -9,6 +10,7 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 public class StorageImpl<T extends BaseEntity> implements Storage<T>{
     private final Map<Long, T> storage = new HashMap<>();
     private final Class<T> type;
@@ -48,6 +50,7 @@ public class StorageImpl<T extends BaseEntity> implements Storage<T>{
         try {
             nextId = Collections.max(storage.keySet()) + 1L;
         } catch (NoSuchElementException e) {
+            log.debug("Storage is empty, initializing nextId to 1");
             nextId = 1L;
         }
         return nextId;
@@ -56,6 +59,7 @@ public class StorageImpl<T extends BaseEntity> implements Storage<T>{
     @Override
     public void delete(Long id) {
         storage.remove(id);
+        log.info("Entity with id {} deleted", id);
     }
 
     @PostConstruct

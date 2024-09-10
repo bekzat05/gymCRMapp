@@ -1,6 +1,7 @@
 package com.bekzat.gym.service;
 
 import com.bekzat.gym.dao.TrainerDAO;
+import com.bekzat.gym.exceptions.TrainerNotFoundException;
 import com.bekzat.gym.model.Trainer;
 import com.bekzat.gym.service.map.TrainerServiceMap;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class TrainerServiceMapTest {
         Long nonExistentId = 1L;
         when(trainerDAO.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> {
+        assertThrows(TrainerNotFoundException.class, () -> {
             trainerServiceMap.findById(nonExistentId);
         });
 
