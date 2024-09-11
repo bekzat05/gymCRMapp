@@ -1,23 +1,11 @@
 package com.bekzat.gym.model;
 
-import lombok.Data;
-
 import java.io.Serializable;
 
-@Data
-public abstract class BaseEntity implements Serializable {
-    Long id;
+public interface BaseEntity <T extends Serializable> {
 
-    public Long getId() {
-        return id;
-    }
+    void setId(T id);
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public boolean isNew() {
-        return this.id == null;
-    }
+    T getId();
 
 }
