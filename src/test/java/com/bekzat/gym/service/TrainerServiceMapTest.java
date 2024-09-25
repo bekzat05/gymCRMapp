@@ -1,65 +1,144 @@
 package com.bekzat.gym.service;
 
-import com.bekzat.gym.dao.TrainerDAO;
-import com.bekzat.gym.exceptions.TrainerNotFoundException;
-import com.bekzat.gym.model.Trainer;
 import com.bekzat.gym.service.map.TrainerServiceMap;
+import com.bekzat.gym.service.map.UserCredentialsService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
+import org.mockito.MockitoAnnotations;
+import com.bekzat.gym.dao.TrainerRepository;
+import com.bekzat.gym.dto.CredentialsDto;
+import com.bekzat.gym.dto.TrainerCreateDto;
+import com.bekzat.gym.dto.TrainerReadDto;
+import com.bekzat.gym.mapper.TrainerMapper;
+import com.bekzat.gym.model.Trainer;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class TrainerServiceMapTest {
 
     @Mock
-    private TrainerDAO trainerDAO;
+    private TrainerRepository trainerRepository;
+
+    @Mock
+    private TrainerMapper trainerMapper;
+
+    @Mock
+    private UserCredentialsService userCredentialsService;
 
     @InjectMocks
-    private TrainerServiceMap trainerServiceMap;
+    private TrainerServiceMap trainerService;
 
-    @Test
-    void testFindByIdSuccess() {
-        Long id = 1L;
-        Trainer expectedTrainer = new Trainer();
-        expectedTrainer.setId(id);
-        when(trainerDAO.findById(id)).thenReturn(Optional.of(expectedTrainer));
-
-        Trainer actualTrainer = trainerServiceMap.findById(id);
-
-        assertEquals(expectedTrainer, actualTrainer);
-        verify(trainerDAO).findById(id);
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testFindByIdThrowsNotFoundException() {
-        Long nonExistentId = 1L;
-        when(trainerDAO.findById(nonExistentId)).thenReturn(Optional.empty());
+    void testCreateTrainer() {
+        TrainerCreateDto dto = new TrainerCreateDto("Boris", "Vlasevsky", true);
+        Trainer trainer = new Trainer();
+        trainer.setFirstName("Boris");
+        trainer.setLastName("Vlasevsky");
 
-        assertThrows(TrainerNotFoundException.class, () -> {
-            trainerServiceMap.findById(nonExistentId);
-        });
+        when(trainerMapper.toEntity(dto)).thenReturn(trainer);
+        when(userCredentialsService.generateUsername("Boris", "Vlasevsky")).thenReturn("boris.vlasevsky");
+        when(userCredentialsService.generateRandomPassword()).thenReturn("password");
+        when(trainerRepository.save(trainer)).thenReturn(trainer);
 
-        verify(trainerDAO).findById(nonExistentId);
+        CredentialsDto credentials = trainerService.create(dto);
+
+        assertNotNull(credentials);
+        assertEquals("boris.vlasevsky", credentials.getUsername());
+        assertEquals("password", credentials.getPassword());
+
+        verify(trainerRepository, times(1)).save(trainer);
     }
 
     @Test
-    void testSave() {
-        Trainer trainerToSave = new Trainer();
-        trainerToSave.setId(1L);
-        when(trainerDAO.save(trainerToSave)).thenReturn(trainerToSave);
+    void testFindTrainerByUsername() {
+        String username = "boris.vlasevsky";
+        Trainer trainer = new Trainer();
+        trainer.setUsername(username);
 
-        Trainer savedTrainer = trainerServiceMap.save(trainerToSave);
+        when(trainerRepository.findByUsername(username)).thenReturn(Optional.of(trainer));
+        when(trainerMapper.toDto(trainer)).thenReturn(new TrainerReadDto(1L, "Boris Vlasevsky"));
 
-        assertEquals(trainerToSave, savedTrainer);
-        verify(trainerDAO).save(trainerToSave);
+        TrainerReadDto result = trainerService.findTrainerByUsername(username, new CredentialsDto(username, "password"));
+
+        assertNotNull(result);
+        assertEquals("Boris Vlasevsky", result.name());
+
+        verify(trainerRepository, times(1)).findByUsername(username);
+    }
+
+    @Test
+    void testChangeTrainerPassword() {
+        Long trainerId = 1L;
+        String newPassword = "newPassword";
+        CredentialsDto credentialsDto = new CredentialsDto("boris.vlasevsky", "password");
+
+        when(userCredentialsService.checkCredentials(credentialsDto)).thenReturn(false);
+
+        trainerService.changeTrainerPassword(trainerId, newPassword, credentialsDto);
+
+        verify(userCredentialsService, times(1)).changePassword(trainerId, newPassword);
+    }
+
+    @Test
+    void testActivateTrainer() {
+        Long trainerId = 1L;
+        Trainer trainer = new Trainer();
+        trainer.setId(trainerId);
+        trainer.setIsActive(false);
+        CredentialsDto credentialsDto = new CredentialsDto("boris.vlasevsky", "password");
+
+        when(trainerRepository.findById(trainerId)).thenReturn(Optional.of(trainer));
+        when(userCredentialsService.checkCredentials(credentialsDto)).thenReturn(false);
+
+        trainerService.activateTrainer(trainerId, credentialsDto);
+
+        assertTrue(trainer.getIsActive());
+        verify(trainerRepository, times(1)).update(trainer);
+    }
+
+    @Test
+    void testDeactivateTrainer() {
+        Long trainerId = 1L;
+        Trainer trainer = new Trainer();
+        trainer.setId(trainerId);
+        trainer.setIsActive(true);
+        CredentialsDto credentialsDto = new CredentialsDto("boris.vlasevsky", "password");
+
+        when(trainerRepository.findById(trainerId)).thenReturn(Optional.of(trainer));
+        when(userCredentialsService.checkCredentials(credentialsDto)).thenReturn(false);
+
+        trainerService.deactivateTrainer(trainerId, credentialsDto);
+
+        assertFalse(trainer.getIsActive());
+        verify(trainerRepository, times(1)).update(trainer);
+    }
+
+    @Test
+    void testFindById() {
+        Long trainerId = 1L;
+        Trainer trainer = new Trainer();
+        trainer.setId(trainerId);
+        CredentialsDto credentialsDto = new CredentialsDto("boris.vlasevsky", "password");
+
+        when(trainerRepository.findById(trainerId)).thenReturn(Optional.of(trainer));
+        when(trainerMapper.toDto(trainer)).thenReturn(new TrainerReadDto(trainerId, "Boris Vlasevsky"));
+
+        TrainerReadDto result = trainerService.findById(trainerId, credentialsDto);
+
+        assertNotNull(result);
+        assertEquals(trainerId, result.id());
+        assertEquals("Boris Vlasevsky", result.name());
+
+        verify(trainerRepository, times(1)).findById(trainerId);
     }
 }

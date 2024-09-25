@@ -1,31 +1,59 @@
 package com.bekzat.gym.config;
 
-import com.bekzat.gym.model.Trainee;
-import com.bekzat.gym.model.Trainer;
-import com.bekzat.gym.model.Training;
-import com.bekzat.gym.storage.Storage;
-import com.bekzat.gym.storage.StorageImpl;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
 
 @Configuration
-@PropertySource("classpath:application.properties")
-@ComponentScan("com.bekzat.gym")
+@PropertySource("classpath:hibernate.properties")
+@ComponentScan(basePackages = "com.bekzat")
+@EnableTransactionManagement
 public class AppConfig {
+
+    @Value("${hibernate.driver_class}")
+    private String driverClass;
+
+    @Value("${hibernate.connection.url}")
+    private String url;
+
+    @Value("${hibernate.connection.username}")
+    private String username;
+
+    @Value("${hibernate.connection.password}")
+    private String password;
+
     @Bean
-    public Storage<Trainee> traineeStorage() {
-        return new StorageImpl<>(Trainee.class);
+    public DataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(driverClass);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        return dataSource;
     }
 
     @Bean
-    public Storage<Trainer> trainerStorage() {
-        return new StorageImpl<>(Trainer.class);
+    public LocalSessionFactoryBean sessionFactory(DataSource dataSource) {
+        LocalSessionFactoryBean sessionFactoryBean = new LocalSessionFactoryBean();
+        sessionFactoryBean.setDataSource(dataSource);
+        sessionFactoryBean.setPackagesToScan("com.bekzat.gym.model");
+        return sessionFactoryBean;
     }
 
+
     @Bean
-    public Storage<Training> trainingStorage() {
-        return new StorageImpl<>(Training.class);
+    public HibernateTransactionManager transactionManager(SessionFactory sessionFactory) {
+        HibernateTransactionManager transactionManager = new HibernateTransactionManager();
+        transactionManager.setSessionFactory(sessionFactory);
+        return transactionManager;
     }
 }
