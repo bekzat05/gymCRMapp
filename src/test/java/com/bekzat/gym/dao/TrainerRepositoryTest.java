@@ -96,4 +96,5 @@ class TrainerRepositoryTest {
         verify(trainerRepository, times(1)).delete(trainerId);
     }
 
+
 }
