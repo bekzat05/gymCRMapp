@@ -2,8 +2,10 @@ package com.bekzat.gym.service.map;
 
 import com.bekzat.gym.dao.UserRepository;
 import com.bekzat.gym.dto.CredentialsDto;
+import com.bekzat.gym.exceptions.AuthenticationException;
 import com.bekzat.gym.exceptions.UserNotFoundException;
 import com.bekzat.gym.model.User;
+import com.bekzat.gym.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,7 +14,7 @@ import java.util.Random;
 
 @Service
 @AllArgsConstructor
-public class UserCredentialsService {
+public class UserCredentialsService implements UserService {
 
     private final UserRepository userRepository;
 
@@ -44,6 +46,7 @@ public class UserCredentialsService {
     }
 
     @Transactional
+
     public void changePassword(Long userId, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId.toString()));
@@ -51,8 +54,24 @@ public class UserCredentialsService {
         userRepository.save(user);
     }
 
-    public boolean checkCredentials(CredentialsDto credentialsDto){
-        return userRepository.checkCredentials(credentialsDto.getUsername(), credentialsDto.getPassword());
+    public boolean checkCredentials(CredentialsDto credentialsDto) {
+        return userRepository.login(credentialsDto);
     }
 
+    @Override
+    @Transactional
+    public boolean login(CredentialsDto credentialsDto) {
+        return userRepository.login(credentialsDto);
+    }
+
+    @Override
+    @Transactional
+    public boolean changePassword(CredentialsDto credentialsDto, String newPassword) {
+        if (checkCredentials(credentialsDto)) {
+            User user = userRepository.findByUsername(credentialsDto.username())
+                    .orElseThrow(() -> new AuthenticationException("Incorrect credentials"));
+            user.setPassword(newPassword);
+            return true;
+        } else return false;
+    }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -20,7 +21,7 @@ public class Trainee extends User {
 
     @ManyToMany(mappedBy = "trainees")
     @ToString.Exclude
-    private Set<Trainer> trainers;
+    private List<Trainer> trainers;
 
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Training> trainings;
