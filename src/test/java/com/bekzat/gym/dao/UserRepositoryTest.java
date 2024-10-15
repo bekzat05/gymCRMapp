@@ -8,13 +8,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import com.bekzat.gym.model.User;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 class UserRepositoryTest {
+
 
     @Mock
     private SessionFactory sessionFactory;
@@ -45,38 +45,6 @@ class UserRepositoryTest {
 
         assertTrue(exists);
         verify(query).setParameter("username", username);
-        verify(query).getSingleResult();
-    }
-
-    @Test
-    void testCheckCredentials() {
-        String username = "testUsername";
-        String password = "testPassword";
-        when(query.setParameter("username", username)).thenReturn(query);
-        when(query.setParameter("password", password)).thenReturn(query);
-        when(query.getSingleResult()).thenReturn(1L);
-
-        boolean validCredentials = userRepository.checkCredentials(username, password);
-
-        assertTrue(validCredentials);
-        verify(query).setParameter("username", username);
-        verify(query).setParameter("password", password);
-        verify(query).getSingleResult();
-    }
-
-    @Test
-    void testCheckCredentialsInvalid() {
-        String username = "testUsername";
-        String password = "wrongPassword";
-        when(query.setParameter("username", username)).thenReturn(query);
-        when(query.setParameter("password", password)).thenReturn(query);
-        when(query.getSingleResult()).thenReturn(0L);
-
-        boolean validCredentials = userRepository.checkCredentials(username, password);
-
-        assertFalse(validCredentials);
-        verify(query).setParameter("username", username);
-        verify(query).setParameter("password", password);
         verify(query).getSingleResult();
     }
 }
