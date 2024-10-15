@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="gymcrm@localhost" uuid="447d5778-5465-4091-9c06-2d1bd8ad3690">
+    <data-source source="LOCAL" name="gym@localhost" uuid="fb552ed1-c8d7-44f2-b849-45498a0f1a87">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://localhost:5432/gymcrm</jdbc-url>
+      <jdbc-url>jdbc:postgresql://localhost:5432/gym</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
   </component>
