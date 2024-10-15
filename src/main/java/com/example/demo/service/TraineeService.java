@@ -8,9 +8,6 @@ import java.util.List;
 
 public interface TraineeService extends BaseService<Trainee, Long> {
 
-
-    CredentialsDto register(TraineeRegistrationDto registrationDto);
-
     TraineeProfileReadDto findTraineeByUsername(String username);
 
     TraineeProfileReadDto update(String username, TraineeCreateAndUpdateDto dto);
@@ -20,8 +17,6 @@ public interface TraineeService extends BaseService<Trainee, Long> {
     void changeActiveStatus(String username, StatusUpdateDto statusUpdateDto);
 
     List<TrainingReadDto> getTraineeTrainings(String username, LocalDateTime from, LocalDateTime to, String trainerName);
-
-    List<TrainingReadDto> getTraineeTrainings(String username);
 
     TraineeProfileReadDto updateTraineeTrainers(String username, List<String> trainers);
 }
