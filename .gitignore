@@ -1,5 +1,6 @@
 # Exclude the etc folder
 etc/
+registry-service/
 
 # Exclude the .idea folder
 .idea/
