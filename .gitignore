@@ -1,9 +1,0 @@
-# Exclude the etc folder
-etc/
-registry-service/
-
-# Exclude the .idea folder
-.idea/
-
-# Exclude the Task_Microservices.pdf file
-Task_Microservices.pdf
