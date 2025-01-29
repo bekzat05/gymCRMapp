@@ -1,0 +1,73 @@
+version: '3.5'
+services:
+    gym-service:
+        build:
+            context: ./gymCRMapp
+        container_name: gym-service
+        ports:
+            - "8080:8080"
+        environment:
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/postgres
+            - SPRING_DATASOURCE_USERNAME=postgres
+            - SPRING_DATASOURCE_PASSWORD=postgres
+        depends_on:
+            - postgres
+        networks:
+            - gym-network
+
+    workload-service:
+        build:
+            context: ./workload-service
+        container_name: workload-service
+        ports:
+            - "8081:8081"
+        environment:
+            - MONGODB_URI=mongodb://mongo:27017/workloaddb
+        depends_on:
+            mongodb:
+                condition: service_started
+            activemq:
+                condition: service_healthy
+        networks:
+            - gym-network
+
+    postgres:
+        image: postgres:14
+        container_name: postgres
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres
+        ports:
+            - "5432:5432"
+        networks:
+            - gym-network
+
+    mongodb:
+        image: mongo:4.4
+        container_name: mongodb
+        restart: always
+        ports:
+            - "27017:27017"
+        networks:
+            - gym-network
+
+    activemq:
+        image: rmohr/activemq
+        container_name: activemq
+        ports:
+            - "61616:61616"
+            - "8161:8161"
+        networks:
+            - gym-network
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8161"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+
+networks:
+    gym-network:
+        name: gym-network
+        driver: bridge
