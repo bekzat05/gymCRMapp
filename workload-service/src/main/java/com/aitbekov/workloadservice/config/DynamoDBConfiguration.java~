@@ -1,0 +1,26 @@
+package com.aitbekov.workloadservice.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class DynamoDBConfiguration {
+    @Value("${aws.region}")
+    private String awsRegion;
+
+    @Value("${aws.dynamodb.endpoint:}")
+    private String dynamoDbEndpoint;
+
+    @Bean
+    public DynamoDbClient dynamoDbClient() {
+        DynamoDbClientBuilder dynamoDbClientBuilder = DynamoDbClient.builder()
+                .region(Region.of(awsRegion))
+                .credentialsProvider(DefaultCredentialsProvider.create());
+
+        if (dynamoDbEndpoint != null && !dynamoDbEndpoint.isEmpty()) {
+            dynamoDbClientBuilder.endpointOverride(URI.create(dynamoDbEndpoint));
+        }
+
+        return dynamoDbClientBuilder.build();
+    }
+}
